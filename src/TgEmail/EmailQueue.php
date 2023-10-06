@@ -17,13 +17,13 @@ use PHPMailer\PHPMailer\PHPMailer;
 class EmailQueue {
 
     /** Constant for blocking any mail sending */
-    public const BLOCK = 'block';
+    const BLOCK = 'block';
     /** Constant for rerouting mails to admin users */
-    public const REROUTE = 'reroute';
+    const REROUTE = 'reroute';
     /** Constant for adding admin user to BCC */
-    public const BCC = 'bcc';
+    const BCC = 'bcc';
     /** Constant for default mail sending */
-    public const DEFAULT = 'default';
+    const DEFAULT = 'default';
     
     protected $mailer;
 

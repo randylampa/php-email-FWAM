@@ -11,12 +11,12 @@ use TgUtils\Date;
  */
 class Email {
 
-    public const PENDING    = 'pending';
-    public const PROCESSING = 'processing';
-    public const SENT       = 'sent';
-    public const FAILED     = 'failed';
-    public const HTML       = 'html';
-    public const TEXT       = 'text';
+    const PENDING    = 'pending';
+    const PROCESSING = 'processing';
+    const SENT       = 'sent';
+    const FAILED     = 'failed';
+    const HTML       = 'html';
+    const TEXT       = 'text';
     
     public $uid;
     public $status;

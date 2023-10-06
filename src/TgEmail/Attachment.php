@@ -10,8 +10,8 @@ namespace TgEmail;
  */
 class Attachment {
 
-    public const ATTACHED = 'default';
-    public const EMBEDDED = 'embedded';
+    const ATTACHED = 'default';
+    const EMBEDDED = 'embedded';
     
     /** The embedding type */
     public $type;
