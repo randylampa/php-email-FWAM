@@ -2,8 +2,7 @@
 
 namespace TgEmail;
 
-//use TgLog\Log;
-use Tracy\Debugger as DBG;
+use TgLog\Log;
 use TgUtils\Date;
 use TgUtils\Request;
 
@@ -278,11 +277,9 @@ class EmailQueue {
         $rc = TRUE;
         if ($this->config->getMailMode() != EmailQueue::BLOCK) {
             $rc = $phpMailer->send();
-            //Log::debug('Mail sent: '.$email->getLogString());
-            DBG::log('Mail sent: '.$email->getLogString(), DBG::DEBUG);
+            Log::debug('Mail sent: '.$email->getLogString());
             if (!$rc) {
-                //Log::error("Mailer Error: " . $phpMailer->ErrorInfo);
-                DBG::log("Mailer Error: " . $phpMailer->ErrorInfo, DBG::ERROR);
+                Log::error("Mailer Error: " . $phpMailer->ErrorInfo);
             } else {
                 foreach ($email->getAttachments() as $a) {
                     if ($a->deleteAfterSent) {
