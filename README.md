@@ -50,7 +50,7 @@ $config = new EmailConfig();
 $config->setTimezone('Europe/Berlin');
 $config->setDefaultSender('John Doe <john.doe@example.com>');
 $config->setSubjectPrefix('[MyAppName] ');
-$config->setDebugAddress('admin@example.com');
+$config->addDebugAddress('admin@example.com');
 ```
 
 The lines above create the configuration and tells it to use the timezone `Europe/Berlin` when it needs
