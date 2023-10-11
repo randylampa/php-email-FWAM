@@ -184,6 +184,7 @@ class EmailQueue {
         } else {
             $rc->setSender($this->config->getDefaultSender());
         }
+        $rc->setPriority($email->getPriority());
         $rc->setReplyTo($email->getReplyTo());
         $rc->addAttachments($email->getAttachments());
         $rc->setBody(Email::TEXT, $email->getBody(Email::TEXT));

@@ -35,6 +35,7 @@ class EmailsDAO extends DAO {
 				'`body`            TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'email bodies\', '.
 				'`attachments`     TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'attachment data\', '.
 				'`queued_time`     DATETIME     NOT NULL COMMENT \'Time the email was queued\', '.
+				'`priority`        INT(11)      NOT NULL COMMENT \'Priority of mail\', '. // FWAM
 				'`status`          VARCHAR(20)  NOT NULL COMMENT \'email subject\', '.
 				'`sent_time`       DATETIME     NULL COMMENT \'Time the email was sent successfully\', '.
 				'`failed_attempts` INT(10)      UNSIGNED NOT NULL DEFAULT 0 COMMENT \'Number of failed sending attempts\', '.
@@ -54,7 +55,8 @@ class EmailsDAO extends DAO {
     }
     
     public function getPendingEmails() {
-        return $this->getEmailsByStatus(Email::PENDING, Order::asc('queued_time'));
+        //return $this->getEmailsByStatus(Email::PENDING, Order::asc('queued_time'));
+        return $this->getEmailsByStatus(Email::PENDING, [Order::desc('priority'), Order::asc('queued_time')]);
     }
 
     public function getFailedEmails() {

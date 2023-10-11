@@ -17,12 +17,24 @@ class Email {
     const FAILED     = 'failed';
     const HTML       = 'html';
     const TEXT       = 'text';
-    
+
+    /* Example priority */
+    const PRIO_HIGH   = 10;
+    const PRIO_NORMAL = 0;
+    const PRIO_LOW    = -10;
+
     public $uid;
     public $status;
     public $failed_attempts;
     public $sent_time;
     public $queued_time;
+    
+    /**
+     * mail priority (-int,0,int)
+     * +higher, -lower
+     * @var int
+     */
+    public $priority = self::PRIO_NORMAL; // FWAM
     
     public $sender;
     public $recipients;
@@ -36,7 +48,25 @@ class Email {
      */
     public function __construct() {
     }
-    
+
+    /**
+     * @return int Email::PRIO_
+     */
+    public function getPriority(): int
+    {
+        return $this->priority;
+    }
+
+    /**
+     * @param int $p Email::PRIO_*
+     * @return $this
+     */
+    public function setPriority(int $p = self::PRIO_NORMAL)
+    {
+        $this->priority = $p;
+        return $this;
+    }
+
     public function getSender() {
         if ($this->sender != NULL) {
             if (!is_object($this->sender)) {
