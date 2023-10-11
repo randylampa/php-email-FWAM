@@ -140,6 +140,7 @@ class EmailConfig {
     
     public function setSubjectPrefix($s) {
         $this->subjectPrefix = $s;
+        return $this;
     }
     
     public static function from($config) {
