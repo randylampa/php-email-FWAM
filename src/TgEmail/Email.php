@@ -28,6 +28,7 @@ class Email {
     public $failed_attempts;
     public $sent_time;
     public $queued_time;
+    public $update_time; // FWAM
     
     /**
      * mail priority (-int,0,int)
@@ -246,6 +247,13 @@ class Email {
             $this->queued_time = new Date($this->queued_time, $timezone);
         }
         return $this->queued_time;
+    }
+    
+    public function getUpdateTime($timezone = 'UTC') {
+        if (($this->update_time != NULL) && is_string($this->update_time)) {
+            $this->update_time = new Date($this->update_time, $timezone);
+        }
+        return $this->update_time;
     }
     
     public function getLogString() {

@@ -442,7 +442,9 @@ class EmailQueue {
     protected function _queue($email) {
         if ($this->mailDAO != NULL) {
             if ($this->config->getMailMode() != EmailQueue::BLOCK) {
-                $email->queued_time     = new Date(time(), $this->config->getTimezone());
+                if (!$email->queued_time) {
+                    $email->queued_time = new Date(time(), $this->config->getTimezone()); // FWAM do not rewrite, can be future
+                }
                 $email->status          = Email::PENDING;
                 $email->failed_attempts = 0;
                 $email->sent_time       = NULL;
