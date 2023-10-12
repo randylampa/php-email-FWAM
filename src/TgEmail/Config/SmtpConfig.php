@@ -5,6 +5,7 @@ namespace TgEmail\Config;
 use TgUtils\Auth\CredentialsProvider;
 use TgUtils\Auth\DefaultCredentialsProvider;
 use TgEmail\EmailException;
+use TgEmail\EmailAddress;
 
 /**
  * Configures the PHPMailer SMTP options.
@@ -20,6 +21,12 @@ class SmtpConfig {
     protected $secureOption;
     protected $credentialsProvider;
     protected $charset;
+    
+    /**
+     * Senders allowed via this SMTP account
+     * @var EmailAddress[]
+     */
+    protected $senders;
     
     /**
      * Constructor.
@@ -106,6 +113,21 @@ class SmtpConfig {
     
     public function setCharset($charset) {
         $this->charset = $charset;
+        return $this;
+    }
+    
+    /**
+     * @return EmailAddress[]
+     */
+    public function getSenders(): array {
+        if (empty($this->senders) && $this->getUsername()) {
+            $this->senders[] = new EmailAddress($this->getUsername()); // TODO: test username is valid email
+        }
+        return $this->senders;
+    }
+    
+    public function addSender(EmailAddress $sender) {
+        $this->senders[] = $sender;
         return $this;
     }
     

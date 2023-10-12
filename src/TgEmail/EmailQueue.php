@@ -235,7 +235,28 @@ class EmailQueue {
         $phpMailer = $this->getMailer();
         
         // Sender
-        $phpMailer->setFrom($email->getSender()->email, $email->getSender()->name);
+        // if sender differs from ones provided in current smtp config, add reply-to and set sender as smtp default
+        $emailSender = $email->getSender();
+        $smtpSenders = $this->config->getSmtpConfig()->getSenders();
+        $found = false;
+        foreach ($smtpSenders as $smtpSender) {
+            if ($smtpSender->email === $emailSender->email) {
+                $found = true;
+                break;
+            }
+        }
+        if ($found) {
+            $phpMailer->setFrom($emailSender->email, $emailSender->name);
+        } elseif (0) {
+            // this form is not received by GMail
+            $smtpSender = $smtpSenders[0];
+            $phpMailer->Sender = $smtpSender->email; // set Sender manually
+            $phpMailer->setFrom($emailSender->email, $emailSender->name, false); // noauto set Sender
+        } elseif (1) {
+            $smtpSender = $smtpSenders[0];
+            $phpMailer->setFrom($smtpSender->email, $emailSender->name); // use SMTP address and EMAIL name
+            $phpMailer->addReplyTo($emailSender->email, $emailSender->name); // add original address into Reply-To
+        }
         
         // Reply-To
         if ($email->getReplyTo() != NULL) {
