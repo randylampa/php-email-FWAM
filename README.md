@@ -48,7 +48,7 @@ use TgEmail\EmailConfig;
 
 $config = new EmailConfig();
 $config->setTimezone('Europe/Berlin');
-$config->setDefaultSender('John Doe <john.doe@example.com>');
+$config->setDefaultSender('john.doe@example.com', 'John Doe');
 $config->setSubjectPrefix('[MyAppName] ');
 $config->addDebugAddress('admin@example.com');
 ```
