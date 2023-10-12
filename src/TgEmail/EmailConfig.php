@@ -21,6 +21,7 @@ class EmailConfig {
     private $debugAddress;
     private $defaultSender;
     private $subjectPrefix;
+    private $rootDir;
     
     /**
      * Constructor.
@@ -34,6 +35,7 @@ class EmailConfig {
         $this->debugAddress  = array();
         $this->defaultSender = NULL;
         $this->subjectPrefix = NULL;
+        //$this->rootDir = strpos(PHP_SAPI, 'cli') !== false ? $_SERVER['PWD'] : $_SERVER['DOCUMENT_ROOT']; // left unfilled
     }
     
     public function getTimezone() {
@@ -140,6 +142,15 @@ class EmailConfig {
     
     public function setSubjectPrefix($s) {
         $this->subjectPrefix = $s;
+        return $this;
+    }
+    
+    public function getRootDir(): string {
+        return $this->rootDir ?: '';
+    }
+    
+    public function setRootDir(string $rd) {
+        $this->rootDir = $rd;
         return $this;
     }
     
