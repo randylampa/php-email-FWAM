@@ -305,14 +305,14 @@ class EmailQueue {
         if ($found) {
             $phpMailer->setFrom($emailSender->email, $emailSender->name);
         } elseif (0) {
-            // this form is not received by GMail
+            // this form is not received by GMail (require valid SPF on From domain)
             $smtpSender = $smtpSenders[0];
             $phpMailer->Sender = $smtpSender->email; // set Sender manually
             $phpMailer->setFrom($emailSender->email, $emailSender->name, false); // noauto set Sender
         } elseif (1) {
             $smtpSender = $smtpSenders[0];
             $phpMailer->setFrom($smtpSender->email, $emailSender->name); // use SMTP address and EMAIL name
-            $phpMailer->addReplyTo($emailSender->email, $emailSender->name); // add original address into Reply-To
+            $phpMailer->addReplyTo($emailSender->email, /*'Re: ' . */$emailSender->name); // add original address into Reply-To
         }
         
         // Reply-To
@@ -332,7 +332,8 @@ class EmailQueue {
         }
 
         // Subject
-        $phpMailer->Subject = '=?utf-8?B?' . base64_encode($email->getSubject()) . '?=';
+        //$phpMailer->Subject = '=?utf-8?B?' . base64_encode($email->getSubject()) . '?=';
+        $phpMailer->Subject = $email->getSubject(); // PHPMailer should handle encoding itself
         
         // Body
         $bodyHTML = $email->getBody(Email::HTML);
