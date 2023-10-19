@@ -140,8 +140,9 @@ class EmailQueue {
     }
 
 	/**
-	  * Returns the mail queue object (DAO).
-	  */
+	 * Returns the mail queue object (DAO).
+     * @return EmailsDAO
+     */
 	public function getQueue() {
 		return $this->mailDAO;
 	}
