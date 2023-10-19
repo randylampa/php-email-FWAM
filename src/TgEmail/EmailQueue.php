@@ -169,7 +169,8 @@ class EmailQueue {
             $this->mailDAO->housekeeping();
             
             // Retrieve pending emails
-            $emails = $this->mailDAO->getPendingEmails();
+            //$emails = $this->mailDAO->getPendingEmails(); // this is very very wasteful, you do not have to load entire object, if you need just uid...
+            $emails = $this->mailDAO->getPendingEmailUids($maxTime < 60 ? 250 : 1000); // numbers are subject of change
             $rc->pending = count($emails);
             foreach ($emails as $email) {
                 // send
