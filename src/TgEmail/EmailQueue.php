@@ -110,7 +110,7 @@ class EmailQueue {
         if ($this->mailer == null) {
             $smtpConfig = $this->config->getSmtpConfig();
             $this->mailer = new PHPMailer();
-            $this->mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel()); // init debug
+            $this->mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
             $this->mailer->isSMTP(); // telling the class to use SMTP
             $this->mailer->SMTPKeepAlive = true;
             $this->mailer->SMTPAuth   = $smtpConfig->isAuth();
@@ -126,7 +126,7 @@ class EmailQueue {
             $oldDbgCfg = $this->mailerDebugOutput($this->mailer, $debugConnect);
             $bc = $this->mailer->smtpConnect(); // perform connect to log
             $this->mailerDebugBasic($this->mailer, ...$oldDbgCfg);
-            if (!$bc) {
+            if (0 || !$bc) {
                 // do something with log stored in $debugConnect on failed connect
                 echo("<div><h5>Connect</h5><textarea>$debugConnect</textarea><br/>{$this->mailer->ErrorInfo}</div>");
             }
@@ -379,7 +379,7 @@ class EmailQueue {
         }
 
         $this->mailerDebugBasic($this->mailer, ...$oldDbgCfg); // return debug state back
-        if (!$rc) {
+        if (0 || !$rc) {
             // do something with log stored in $debugSend on failed send
             echo("<div><h5>Send [uid:$email->uid|$email->queued_time]</h5><textarea>$debugSend</textarea><br/>$phpMailer->ErrorInfo</div>");
             $phpMailer->ErrorInfo = ''; // clear error
