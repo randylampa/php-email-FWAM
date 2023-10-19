@@ -31,9 +31,12 @@ class EmailQueue {
 
     protected $config;
 
+    /**
+     * @var EmailsDAO
+     */
     protected $mailDAO;
     
-    public function __construct($config, $mailDAO = NULL) {
+    public function __construct($config, EmailsDAO $mailDAO = NULL) {
         $this->config  = $config;
         $this->mailDAO = $mailDAO;
         $this->mailer  = NULL;
