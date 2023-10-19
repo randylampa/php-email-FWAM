@@ -152,7 +152,12 @@ class EmailQueue {
      */
     public function processQueue($maxTime = 0) {
         if ($maxTime <= 0) $maxTime = 60;
-        
+
+        // numbers are subject of change
+        $maxLimitMinute = 250;
+        $maxLimitHour = 2000;
+        $loadMaxPending = $maxTime < 60 ? $maxLimitMinute : $maxLimitHour;
+
         if ($this->mailDAO != NULL) {
             // Make sure the request object was created
             Request::getRequest();
@@ -170,9 +175,14 @@ class EmailQueue {
             
             // Retrieve pending emails
             //$emails = $this->mailDAO->getPendingEmails(); // this is very very wasteful, you do not have to load entire object, if you need just uid...
-            $emails = $this->mailDAO->getPendingEmailUids($maxTime < 60 ? 250 : 1000); // numbers are subject of change
+            $emails = $this->mailDAO->getPendingEmailUids($loadMaxPending);
             $rc->pending = count($emails);
             foreach ($emails as $email) {
+                // test how many you can possibly send (limit minus sent in last minute, hour)
+                if (0) {
+                    $rc->skipped++;
+                    continue;
+                }
                 // send
                 if ($this->sendByUid($email->uid, TRUE)) {
                     $rc->sent++;
@@ -198,7 +208,9 @@ class EmailQueue {
             if ($email != NULL) {
                 // Mark as being processed
                 $email->status = Email::PROCESSING;
-                $this->mailDAO->save($email);
+                if ($this->mailDAO->save($email)) {
+                    // do something if save failed???
+                }
 
                 // send
                 $rc = $this->_send($email);
