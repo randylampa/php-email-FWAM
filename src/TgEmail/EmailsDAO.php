@@ -52,6 +52,20 @@ class EmailsDAO extends DAO {
         return TRUE;
     }
     
+	/**
+     * remove property update_time, 'cos DB sets CURRENT_TIMESTAMP on update
+	 * @param object $object - the object to be persisted
+	 * @param boolean $isCreate - TRUE when this is a new object to be created
+	 * @return object the actual object to be persisted
+	 */
+    protected function preSave($object, $isCreate) {
+        $object2 = parent::preSave($object, $isCreate);
+        if (!$isCreate) {
+            unset($object2->update_time);
+        }
+        return $object2;
+    }
+    
     public function housekeeping($maxSentDays = 90, $maxFailedDays = 180) {
         $this->database->delete($this->tableName, array(Restrictions::eq('status', 'sent'),  Restrictions::sql('TIMESTAMPDIFF(DAY, sent_time, NOW()) >= '.$maxSentDays)));
         $this->database->delete($this->tableName, array(Restrictions::eq('status','failed'), Restrictions::sql('TIMESTAMPDIFF(DAY, sent_time, NOW()) >= '.$maxFailedDays)));
