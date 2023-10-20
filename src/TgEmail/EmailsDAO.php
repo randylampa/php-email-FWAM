@@ -72,7 +72,7 @@ class EmailsDAO extends DAO {
     public function getPendingEmailUids(int $maxObjects = 0) {
         return $this->findUids(
                         [Restrictions::eq('status', Email::PENDING), Restrictions::sql('queued_time <= NOW()')],
-                        [Order::desc('priority'), Order::asc('queued_time')],
+                        [Order::desc('priority'), Order::asc('queued_time'), Order::asc($this->idColumn)],
                         0,
                         $maxObjects
         );
