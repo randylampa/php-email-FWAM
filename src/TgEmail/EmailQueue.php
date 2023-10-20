@@ -8,7 +8,6 @@ use TgUtils\Request;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-use Html2Text\Html2Text;
 
 /**
  * Central mail handler using PHPMailer.
@@ -354,17 +353,14 @@ class EmailQueue {
         
         // Body
         $bodyHTML = $email->getBody(Email::HTML);
-        $bodyTEXT = $email->getBody(Email::TEXT);
+        $bodyText = $email->getBody(Email::TEXT);
         if ($bodyHTML != NULL) {
-            $phpMailer->msgHTML($bodyHTML, $this->config->getRootDir(), function ($html) {
-                //echo(nl2br(htmlspecialchars($html)));
-                return (new Html2Text($html))->getText();
-            });
-            if ($bodyTEXT != NULL) {
-                $phpMailer->AltBody = $bodyTEXT;
+            $phpMailer->msgHTML($bodyHTML, $this->config->getRootDir());
+            if ($bodyText != NULL) {
+                $phpMailer->AltBody = $bodyText; // overwrite translated HTML
             }
         } else {
-            $phpMailer->Body = $bodyTEXT;
+            $phpMailer->Body = $bodyText;
         }
         
         // Attachments
