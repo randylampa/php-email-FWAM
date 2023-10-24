@@ -347,8 +347,13 @@ class EmailQueue {
             $phpMailer->addBCC($recipient->email, $recipient->name);
         }
 
+        if (1) {
+            // custom headers
+            $phpMailer->addCustomHeader('Precedence', 'bulk');
+            //$phpMailer->addCustomHeader('List-Unsubscribe', '???');
+        }
+
         // Subject
-        //$phpMailer->Subject = '=?utf-8?B?' . base64_encode($email->getSubject()) . '?=';
         $phpMailer->Subject = $email->getSubject(); // PHPMailer should handle encoding itself
         
         // Body
