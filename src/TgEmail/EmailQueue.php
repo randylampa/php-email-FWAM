@@ -119,7 +119,8 @@ class EmailQueue {
             $this->mailer->Username   = $smtpConfig->getUsername();
             $this->mailer->Password   = $smtpConfig->getPassword();
             $this->mailer->CharSet    = $smtpConfig->getCharset();
-            $this->mailer->Encoding   = 'base64';
+            $this->mailer->Encoding   = PHPMailer::ENCODING_BASE64;
+            //$this->mailer->Encoding   = PHPMailer::ENCODING_QUOTED_PRINTABLE;
 
             $debugConnect = '';
             $oldDbgCfg = $this->mailerDebugOutput($this->mailer, $debugConnect);
@@ -371,9 +372,9 @@ class EmailQueue {
         // Attachments
         foreach ($email->getAttachments() as $a) {
             if ($a->type == Attachment::ATTACHED) {
-                $phpMailer->AddAttachment($a->path, $a->name, 'base64', $a->mimeType);
+                $phpMailer->addAttachment($a->path, $a->name, PHPMailer::ENCODING_BASE64, $a->mimeType);
             } else if ($a->type == 'embedded') {
-                $phpMailer->AddEmbeddedImage($a->path, $a->cid, $a->name);
+                $phpMailer->addEmbeddedImage($a->path, $a->cid, $a->name);
             }
         }
 
