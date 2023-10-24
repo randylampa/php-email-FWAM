@@ -18,7 +18,6 @@
 		"php" : ">=7.0.0",
 		"technicalguru/utils-fwam" : "@dev",
 		"phpmailer/phpmailer" : "^6.1",
-		"html2text/html2text": "^4.3",
 		"technicalguru/database-fwam" : "@dev"
 	},
 	"autoload" : {
