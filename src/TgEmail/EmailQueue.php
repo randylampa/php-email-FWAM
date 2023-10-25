@@ -208,7 +208,8 @@ class EmailQueue {
             if ($email != NULL) {
                 // Mark as being processed
                 $email->status = Email::PROCESSING;
-                if ($this->mailDAO->save($email)) {
+                $rc_s = $this->mailDAO->save($email);
+                if (!$rc_s) {
                     // do something if save failed???
                 }
 
