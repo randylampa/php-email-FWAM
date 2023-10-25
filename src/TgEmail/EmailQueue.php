@@ -77,19 +77,20 @@ class EmailQueue {
     protected static function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
             $Debugoutput = 'error_log'): array
     {
-        $oldLevel = $mailer->SMTPDebug;
-        $oldDebugoutput = $mailer->Debugoutput;
-
-        $mailer->SMTPDebug = $level;
-        $mailer->Debugoutput = $Debugoutput;
-        $smtp = $mailer->getSMTPInstance();
-        $smtp->setDebugLevel($mailer->SMTPDebug);
-        $smtp->setDebugOutput($mailer->Debugoutput);
-
-        return [
-            $oldLevel,
-            $oldDebugoutput
-        ];
+        return EmailMailer::mailerDebugBasic($mailer, $level);
+//        $oldLevel = $mailer->SMTPDebug;
+//        $oldDebugoutput = $mailer->Debugoutput;
+//
+//        $mailer->SMTPDebug = $level;
+//        $mailer->Debugoutput = $Debugoutput;
+//        $smtp = $mailer->getSMTPInstance();
+//        $smtp->setDebugLevel($mailer->SMTPDebug);
+//        $smtp->setDebugOutput($mailer->Debugoutput);
+//
+//        return [
+//            $oldLevel,
+//            $oldDebugoutput
+//        ];
     }
     
     /**
@@ -98,11 +99,12 @@ class EmailQueue {
      */
     protected static function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
     {
-        $old = static::mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
-                //dump($str, $level);
-                $output .= $str . PHP_EOL;
-        });
-        return $old;
+        return EmailMailer::mailerDebugOutput($mailer, $output);
+//        $old = static::mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
+//                //dump($str, $level);
+//                $output .= $str . PHP_EOL;
+//        });
+//        return $old;
     }
     
     protected function getMailer(): PHPMailer {
@@ -154,8 +156,8 @@ class EmailQueue {
         if ($maxTime <= 0) $maxTime = 60;
 
         // numbers are subject of change
-        $maxLimitMinute = 250;
-        $maxLimitHour = 2000;
+        $maxLimitMinute = 250; // 250
+        $maxLimitHour = 1000; // 1000
         $loadMaxPending = $maxTime < 60 ? $maxLimitMinute : $maxLimitHour;
 
         if ($this->mailDAO != NULL) {
@@ -176,6 +178,7 @@ class EmailQueue {
             // Retrieve pending emails
             //$emails = $this->mailDAO->getPendingEmails(); // this is very very wasteful, you do not have to load entire object, if you need just uid...
             $emails = $this->mailDAO->getPendingEmailUids($loadMaxPending);
+            //dump($emails);
             $rc->pending = count($emails);
             foreach ($emails as $email) {
                 // test how many you can possibly send (limit minus sent in last minute, hour)
@@ -204,6 +207,7 @@ class EmailQueue {
         if ($this->mailDAO != NULL) {
             // Retrieve
             $email = $this->mailDAO->get($uid);
+            //dump($email);
             
             if ($email != NULL) {
                 // Mark as being processed
@@ -369,6 +373,7 @@ class EmailQueue {
         } else {
             $phpMailer->Body = $bodyText;
         }
+        //dumpe($phpMailer);
         
         // Attachments
         foreach ($email->getAttachments() as $a) {
@@ -381,6 +386,7 @@ class EmailQueue {
 
         $rc = TRUE;
         if ($this->config->getMailMode() != EmailQueue::BLOCK) {
+            //dumpe([$email, $phpMailer]);
             $rc = $phpMailer->send();
             Log::debug('Mail sent: '.$email->getLogString());
             if (!$rc) {
