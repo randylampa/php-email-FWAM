@@ -28,9 +28,63 @@ class EmailMailer
      */
     protected $mailer = null;
 
+    /**
+     * @var int
+     */
+    protected $sentLastMinute = 0;
+
+    /**
+     * @var int
+     */
+    protected $sentLastHour = 0;
+
+    /**
+     * @var int
+     */
+    protected $sentLastDay = 0;
+
     public function __construct(Config\SmtpConfig $smtpConfig)
     {
         $this->smtpConfig = $smtpConfig;
+    }
+
+    public function getName(): string
+    {
+        $host = $this->smtpConfig->getHost();
+        $user = $this->smtpConfig->getUsername();
+        return "$user@$host";
+    }
+
+    public function getNameHash(): string
+    {
+        return md5($this->getName());
+    }
+
+    public function refreshLimits(EmailsDAO $dao): self
+    {
+        $sent_via_cfg = $this->getNameHash();
+        $this->sentLastMinute = $dao->getCountSentVia($sent_via_cfg, 'MINUTE');
+        $this->sentLastHour = $dao->getCountSentVia($sent_via_cfg, 'HOUR');
+        $this->sentLastDay = $dao->getCountSentVia($sent_via_cfg, 'DAY');
+        return $this;
+    }
+
+    public function setSent(): self
+    {
+        $this->sentLastMinute += 1;
+        $this->sentLastHour += 1;
+        $this->sentLastDay += 1;
+        return $this;
+    }
+
+    public function canSendAnother(): bool
+    {
+        $smtpConfig = $this->smtpConfig;
+        return 1 &&
+                $this->sentLastMinute < $smtpConfig->limitMinute &&
+                $this->sentLastHour < $smtpConfig->limitHour &&
+                $this->sentLastDay < $smtpConfig->limitDay &&
+                1;
     }
 
     /**

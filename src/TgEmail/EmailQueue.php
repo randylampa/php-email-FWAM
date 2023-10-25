@@ -112,13 +112,36 @@ class EmailQueue {
 
     /**
      * @param Email $email
+     * @return EmailMailer
+     */
+    public function fwam_getMailerWrapperForEmail(Email $email): EmailMailer
+    {
+        // get mailer according to $email->send_via_cfg else use default
+        if (!isset($this->wrapper)) {
+            $this->wrapper = null; // just temporary
+        }
+        if (!$this->wrapper) {
+            // get default for now
+            $smtpConfig = $this->config->getSmtpConfig();
+            $this->wrapper = new EmailMailer($smtpConfig);
+            if ($this->mailDAO) {
+                $this->wrapper->refreshLimits($this->mailDAO);
+            }
+            dump([$this->wrapper, $this->wrapper->getNameHash()]);
+        }
+        return $this->wrapper;
+    }
+
+    /**
+     * @param Email $email
      * @return PHPMailer
      */
     public function fwam_getMailerForEmail(Email $email): PHPMailer
     {
-        // get mailer according to $email->send_via_cfg else use default
-        $phpMailer = $this->getMailer();
-
+//        $phpMailer = $this->getMailer();
+//        return $phpMailer;
+        $wrapper = $this->fwam_getMailerWrapperForEmail($email);
+        $phpMailer = $wrapper->getPhpMailerInstance();
         return $phpMailer;
     }
 
@@ -128,7 +151,28 @@ class EmailQueue {
      */
     public function fwam_canSendEmail(Email $email): bool
     {
-        return true;
+        //dump([__METHOD__, func_get_args(), debug_backtrace()]);
+//        return true;
+        $wrapper = $this->fwam_getMailerWrapperForEmail($email);
+        return $wrapper->canSendAnother();
+    }
+
+    /**
+     * @param Email $email
+     */
+    public function fwam_updateMailerProps(Email $email)
+    {
+        //dump([__METHOD__, func_get_args(), debug_backtrace()]);
+        $wrapper = $this->fwam_getMailerWrapperForEmail($email);
+        $wrapper->setSent();
+
+        $email->status = Email::SENT;
+        $email->sent_via_cfg = $wrapper->getNameHash();
+
+        if (!$email->uid && $this->mailDAO) {
+            // store to queue as
+            $this->mailDAO->create($email);
+        }
     }
 
     /**
@@ -163,10 +207,10 @@ class EmailQueue {
             //dump($emails);
             $rc->pending = count($emails);
             foreach ($emails as $email) {
-                if (!$this->fwam_canSendEmail($email)) {
-                    $rc->skipped++;
-                    continue;
-                }
+//                if (!$this->fwam_canSendEmail($email)) {
+//                    $rc->skipped++;
+//                    continue;
+//                }
                 // send
                 if ($this->sendByUid($email->uid, TRUE)) {
                     $rc->sent++;
@@ -293,7 +337,7 @@ class EmailQueue {
             return false;
         }
         //$phpMailer = $this->getMailer();
-        $phpMailer = $this->fwam_getMailerForEmail();
+        $phpMailer = $this->fwam_getMailerForEmail($email);
         
         if (!$phpMailer->getSMTPInstance()->connected()) {
             // should be already connected, do not repeat connection and signal fail
@@ -382,6 +426,7 @@ class EmailQueue {
             if (!$rc) {
                 Log::error("Mailer Error: " . $phpMailer->ErrorInfo);
             } else {
+                $this->fwam_updateMailerProps($email);
                 foreach ($email->getAttachments() as $a) {
                     if ($a->deleteAfterSent) {
                         unlink($a->path);
