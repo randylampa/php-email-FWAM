@@ -74,7 +74,7 @@ class EmailQueue {
      * @param string|callable $Debugoutput
      * @return array old values [$level, $Debugoutput]
      */
-    protected function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
+    protected static function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
             $Debugoutput = 'error_log'): array
     {
         $oldLevel = $mailer->SMTPDebug;
@@ -96,9 +96,9 @@ class EmailQueue {
      * @param PHPMailer $mailer
      * @return array old values [$level, $Debugoutput]
      */
-    protected function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
+    protected static function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
     {
-        $old = $this->mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
+        $old = static::mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
                 //dump($str, $level);
                 $output .= $str . PHP_EOL;
         });
