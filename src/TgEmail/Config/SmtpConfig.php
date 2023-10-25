@@ -21,6 +21,21 @@ class SmtpConfig {
     protected $secureOption;
     protected $credentialsProvider;
     protected $charset;
+
+    /**
+     * @var int
+     */
+    public $limitMinute = 250;
+
+    /**
+     * @var int
+     */
+    public $limitHour = 1000;
+
+    /**
+     * @var int
+     */
+    public $limitDay = 20000;
     
     /**
      * Senders allowed via this SMTP account
