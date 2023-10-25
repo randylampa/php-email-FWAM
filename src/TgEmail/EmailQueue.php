@@ -151,6 +151,18 @@ class EmailQueue {
 
     /**
      * @param Email $email
+     * @return PHPMailer
+     */
+    public function fwam_getMailerForEmail(Email $email): PHPMailer
+    {
+        // get mailer according to $email->send_via_cfg else use default
+        $phpMailer = $this->getMailer();
+
+        return $phpMailer;
+    }
+
+    /**
+     * @param Email $email
      * @return bool
      */
     public function fwam_canSendEmail(Email $email): bool
@@ -319,7 +331,8 @@ class EmailQueue {
             // repeat test 'cos its different entry
             return false;
         }
-        $phpMailer = $this->getMailer();
+        //$phpMailer = $this->getMailer();
+        $phpMailer = $this->fwam_getMailerForEmail();
         
         if (!$phpMailer->getSMTPInstance()->connected()) {
             // should be already connected, do not repeat connection and signal fail
