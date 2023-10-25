@@ -67,51 +67,12 @@ class EmailQueue {
     public function setMailMode($mailMode, $config = NULL) {
         $this->config->setMailMode($mailMode, $config);
     }
-    
-    /**
-     * @param PHPMailer $mailer
-     * @param int $level
-     * @param string|callable $Debugoutput
-     * @return array old values [$level, $Debugoutput]
-     */
-    protected static function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
-            $Debugoutput = 'error_log'): array
-    {
-        return EmailMailer::mailerDebugBasic($mailer, $level);
-//        $oldLevel = $mailer->SMTPDebug;
-//        $oldDebugoutput = $mailer->Debugoutput;
-//
-//        $mailer->SMTPDebug = $level;
-//        $mailer->Debugoutput = $Debugoutput;
-//        $smtp = $mailer->getSMTPInstance();
-//        $smtp->setDebugLevel($mailer->SMTPDebug);
-//        $smtp->setDebugOutput($mailer->Debugoutput);
-//
-//        return [
-//            $oldLevel,
-//            $oldDebugoutput
-//        ];
-    }
-    
-    /**
-     * @param PHPMailer $mailer
-     * @return array old values [$level, $Debugoutput]
-     */
-    protected static function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
-    {
-        return EmailMailer::mailerDebugOutput($mailer, $output);
-//        $old = static::mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
-//                //dump($str, $level);
-//                $output .= $str . PHP_EOL;
-//        });
-//        return $old;
-    }
-    
+        
     protected function getMailer(): PHPMailer {
         if ($this->mailer == null) {
             $smtpConfig = $this->config->getSmtpConfig();
             $this->mailer = new PHPMailer();
-            $this->mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
+            EmailMailer::mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
             $this->mailer->isSMTP(); // telling the class to use SMTP
             $this->mailer->SMTPKeepAlive = true;
             $this->mailer->SMTPAuth   = $smtpConfig->isAuth();
@@ -125,9 +86,9 @@ class EmailQueue {
             //$this->mailer->Encoding   = PHPMailer::ENCODING_QUOTED_PRINTABLE;
 
             $debugConnect = '';
-            $oldDbgCfg = $this->mailerDebugOutput($this->mailer, $debugConnect);
+            $oldDbgCfg = EmailMailer::mailerDebugOutput($this->mailer, $debugConnect);
             $bc = $this->mailer->smtpConnect(); // perform connect to log
-            $this->mailerDebugBasic($this->mailer, ...$oldDbgCfg);
+            EmailMailer::mailerDebugBasic($this->mailer, ...$oldDbgCfg);
             if (0 || !$bc) {
                 // do something with log stored in $debugConnect on failed connect
                 echo("<div><h5>Connect</h5><textarea>$debugConnect</textarea><br/>{$this->mailer->ErrorInfo}</div>");
@@ -340,7 +301,7 @@ class EmailQueue {
         }
 
         $debugSend = '';
-        $oldDbgCfg = $this->mailerDebugOutput($this->mailer, $debugSend); // enable debug output
+        $oldDbgCfg = EmailMailer::mailerDebugOutput($phpMailer, $debugSend); // enable debug output
         
         // Sender
         // if sender differs from ones provided in current smtp config, add reply-to and set sender as smtp default
@@ -429,7 +390,7 @@ class EmailQueue {
             }
         }
 
-        $this->mailerDebugBasic($this->mailer, ...$oldDbgCfg); // return debug state back
+        EmailMailer::mailerDebugBasic($phpMailer, ...$oldDbgCfg); // return debug state back
         if (0 || !$rc) {
             // do something with log stored in $debugSend on failed send
             echo("<div><h5>Send [uid:$email->uid|$email->queued_time]</h5><textarea>$debugSend</textarea><br/>$phpMailer->ErrorInfo</div>");

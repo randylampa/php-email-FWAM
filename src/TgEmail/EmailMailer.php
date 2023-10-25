@@ -39,7 +39,7 @@ class EmailMailer
      * @param string|callable $Debugoutput
      * @return array old values [$level, $Debugoutput]
      */
-    protected static function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
+    public static function mailerDebugBasic(PHPMailer $mailer, int $level = SMTP::DEBUG_OFF,
             $Debugoutput = 'error_log'): array
     {
         $oldLevel = $mailer->SMTPDebug;
@@ -61,7 +61,7 @@ class EmailMailer
      * @param PHPMailer $mailer
      * @return array old values [$level, $Debugoutput]
      */
-    protected static function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
+    public static function mailerDebugOutput(PHPMailer $mailer, string &$output = ''): array
     {
         $old = static::mailerDebugBasic($mailer, SMTP::DEBUG_SERVER, function ($str, $level) use (&$output) {
                     //dump($str, $level);
