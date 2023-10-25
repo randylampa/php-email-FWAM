@@ -29,6 +29,7 @@ class EmailsDAO extends DAO {
 			'CREATE TABLE `'.$this->tableName.'` ( '.
 				'`'.$this->idColumn.'`  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT \'ID of queue element\', '.
 				'`sender`          VARCHAR(200) NOT NULL COMMENT \'sender address\', '.
+				'`sent_via_cfg`    VARCHAR(50)  DEFAULT NULL COMMENT \'which sender account configuration was used\', '.
 				'`reply_to`        VARCHAR(200) NULL COMMENT \'Reply-To address\', '.
 				'`recipients`      TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'email recipients\', '.
 				'`subject`         VARCHAR(200) NOT NULL COMMENT \'email subject\', '.
@@ -42,7 +43,8 @@ class EmailsDAO extends DAO {
 				'`failed_attempts` TINYINT(2)   UNSIGNED NOT NULL DEFAULT 0 COMMENT \'Number of failed sending attempts\', '.
 				'PRIMARY KEY (`'.$this->idColumn.'`), '.
 				'KEY `idx_status` (`status`), '.
-				'KEY `idx_priority_queued_time` (`priority`,`queued_time`) '.
+				'KEY `idx_priority_queued_time` (`priority`,`queued_time`), '.
+				'KEY `idx_sent_via_cfg` (`sent_via_cfg`) '.
 			') ENGINE = InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin COMMENT = \'Email Queue\'';
 		
 		$res = $this->database->query($sql);
@@ -91,5 +93,29 @@ class EmailsDAO extends DAO {
                         $maxObjects
         );
     }
+
+    /**
+     * TIMESTAMPDIFF
+     * MINUTE
+     * HOUR
+     * DAY
+     * @param string $sent_via_cfg
+     * @param string $interval
+     * @return int
+     */
+    public function getCountSentVia(string $sent_via_cfg, string $interval): int
+    {
+        $a = ['MINUTE', 'HOUR', 'DAY'];
+        if (!in_array($interval, $a)) {
+            return null;
+        }
+        return $this->count([
+                    //Restrictions::eq('status', Email::SENT)
+                    Restrictions::eq('sent_via_cfg', $sent_via_cfg),
+                    Restrictions::isNotNull('sent_time'),
+                    Restrictions::sql("TIMESTAMPDIFF($interval, sent_time, CURRENT_TIMESTAMP) < 1 "),
+        ]);
+    }
+
 }
 

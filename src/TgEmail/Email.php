@@ -36,7 +36,12 @@ class Email {
      * @var int
      */
     public $priority = self::PRIO_NORMAL; // FWAM
-    
+
+    /**
+     * CFG preset used as SMTP account
+     * @var string
+     */
+    public $sent_via_cfg; // FWAM
     public $sender;
     public $recipients;
     public $reply_to;
