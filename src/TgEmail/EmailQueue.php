@@ -150,6 +150,15 @@ class EmailQueue {
 	}
 
     /**
+     * @param Email $email
+     * @return bool
+     */
+    public function fwam_canSendEmail(Email $email): bool
+    {
+        return true;
+    }
+
+    /**
      * Synchronously send emails from queue according to priority.
      */
     public function processQueue($maxTime = 0) {
@@ -181,8 +190,7 @@ class EmailQueue {
             //dump($emails);
             $rc->pending = count($emails);
             foreach ($emails as $email) {
-                // test how many you can possibly send (limit minus sent in last minute, hour)
-                if (0) {
+                if (!$this->fwam_canSendEmail($email)) {
                     $rc->skipped++;
                     continue;
                 }
@@ -210,6 +218,10 @@ class EmailQueue {
             //dump($email);
             
             if ($email != NULL) {
+                if (!$this->fwam_canSendEmail($email)) {
+                    // repeat test 'cos its different entry
+                    return false;
+                }
                 // Mark as being processed
                 $email->status = Email::PROCESSING;
                 $rc_s = $this->mailDAO->save($email);
@@ -303,6 +315,10 @@ class EmailQueue {
      */
     protected function _send(Email $email) {
         // Start
+        if (!$this->fwam_canSendEmail($email)) {
+            // repeat test 'cos its different entry
+            return false;
+        }
         $phpMailer = $this->getMailer();
         
         if (!$phpMailer->getSMTPInstance()->connected()) {
