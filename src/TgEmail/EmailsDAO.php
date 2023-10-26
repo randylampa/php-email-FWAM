@@ -29,7 +29,7 @@ class EmailsDAO extends DAO {
 			'CREATE TABLE `'.$this->tableName.'` ( '.
 				'`'.$this->idColumn.'`  INT(10) UNSIGNED NOT NULL AUTO_INCREMENT COMMENT \'ID of queue element\', '.
 				'`sender`          VARCHAR(200) NOT NULL COMMENT \'sender address\', '.
-				'`sent_via_cfg`    VARCHAR(50)  DEFAULT NULL COMMENT \'which sender account configuration was used\', '.
+				'`sent_via_cfg`    VARCHAR(35)  DEFAULT NULL COMMENT \'which sender account configuration was used (mostly MD5 hash)\', '.
 				'`reply_to`        VARCHAR(200) NULL COMMENT \'Reply-To address\', '.
 				'`recipients`      TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'email recipients\', '.
 				'`subject`         VARCHAR(200) NOT NULL COMMENT \'email subject\', '.
