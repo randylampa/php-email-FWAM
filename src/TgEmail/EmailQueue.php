@@ -162,7 +162,8 @@ class EmailQueue {
             $phpMailer = $wrapper->getPhpMailerInstance();
             $connected = $phpMailer->smtpConnect();
             if (!$connected) {
-                dump(['failed to connect', $wrapper]);
+                //dump(['failed to connect', $wrapper]);
+                Log::warn('failed to connect', $wrapper);
             }
             $allConnected &= $connected;
         }
@@ -178,17 +179,19 @@ class EmailQueue {
         /* reuse old object */
         try {
             $wrapper = $this->getMailerWrapper($wrapper->getNameHash());
-            dump(['got existing wrapper']);
+            //dump(['got existing wrapper']);
+            Log::debug('got existing wrapper');
         } catch (MailerWrapperNotFoundException $ex) {
             $this->addMailerWrapper($wrapper);
-            dump(['storing wrapper']);
+            //dump(['storing wrapper']);
+            Log::debug('storing wrapper');
         }
         /* /reuse old object */
 
         if ($this->mailDAO) {
             $wrapper->refreshLimits($this->mailDAO);
         }
-        dump([$wrapper, $wrapper->getName(), $wrapper->getNameHash()]); // musí být před pokusem o inicializaci nového
+        //dump([$wrapper, $wrapper->getName(), $wrapper->getNameHash()]); // musí být před pokusem o inicializaci nového
         if (!$wrapper->canSendAnother()) {
             try {
                 $wrapperAlt = $wrapper->getAlternativeWrapper();
@@ -196,7 +199,8 @@ class EmailQueue {
                 $wrapper = $this->fwam_initMailerWrapper($wrapperAlt);
             } catch (MailerWrapperNotFoundException $ex) {
                 // has no other alternative.. left current
-                dump($ex, $this);
+                //dump($ex, $this);
+                Log::warn('limits reached and no other alternative');
             }
         }
         return $wrapper;
@@ -219,7 +223,8 @@ class EmailQueue {
             // get mailer according to $email->send_via_cfg (from pool) ...
             try {
                 $wrapper = $this->getMailerWrapper($email->send_via_cfg);
-                dump(['got existing wrapper by $email->send_via_cfg']);
+                //dump(['got existing wrapper by $email->send_via_cfg']);
+                Log::debug('got existing wrapper by $email->send_via_cfg');
             } catch (MailerWrapperNotFoundException $ex) {
                 // silent nothing
             }
@@ -229,7 +234,8 @@ class EmailQueue {
             // ... else use default
             try {
                 $wrapper = $this->getDefaultMailerWrapper();
-                dump(['got default wrapper']);
+                //dump(['got default wrapper']);
+                Log::debug('got default wrapper');
             } catch (MailerWrapperNotFoundException $ex) {
                 // get new default SMTP for now
                 $wrapper = new MailerWrapper($this->config->getSmtpConfig());
@@ -516,7 +522,7 @@ class EmailQueue {
         } else {
             $phpMailer->Body = $bodyText;
         }
-        //dumpe($phpMailer);
+        //dump($phpMailer);
         
         // Attachments
         foreach ($email->getAttachments() as $a) {
