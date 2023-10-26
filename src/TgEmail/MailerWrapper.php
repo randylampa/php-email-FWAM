@@ -29,6 +29,16 @@ class MailerWrapper
     protected $mailer = null;
 
     /**
+     * @var string
+     */
+    protected $name = null;
+
+    /**
+     * @var string
+     */
+    protected $nameHash = null;
+
+    /**
      * @var int
      */
     protected $sentLastMinute = 0;
@@ -50,14 +60,20 @@ class MailerWrapper
 
     public function getName(): string
     {
-        $host = $this->smtpConfig->getHost();
-        $user = $this->smtpConfig->getUsername();
-        return "$user@$host";
+        if (is_null($this->name)) {
+            $host = $this->smtpConfig->getHost();
+            $user = $this->smtpConfig->getUsername();
+            $this->name = "$user@$host";
+        }
+        return $this->name;
     }
 
     public function getNameHash(): string
     {
-        return md5($this->getName());
+        if (is_null($this->nameHash)) {
+            $this->nameHash = md5($this->getName());
+        }
+        return $this->nameHash;
     }
 
     public function refreshLimits(EmailsDAO $dao): self
