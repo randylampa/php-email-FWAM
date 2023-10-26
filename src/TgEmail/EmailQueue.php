@@ -294,10 +294,12 @@ class EmailQueue {
     public function processQueue($maxTime = 0) {
         if ($maxTime <= 0) $maxTime = 60;
 
-        // numbers are subject of change
-        $maxLimitMinute = 250; // 250
-        $maxLimitHour = 1000; // 1000
-        $loadMaxPending = $maxTime < 60 ? $maxLimitMinute : $maxLimitHour;
+        $nAccounts = count($this->mailerWrappers);
+        $nMinutes = intval(ceil($maxTime / 60));
+        $smtpConfig = $this->config->getSmtpConfig();
+        $loadLimitMinute = ($nAccounts ? $nAccounts : 1) * $smtpConfig->limitMinute; // eg. 250 - one forpsi account limit
+        $loadMaxPending = $loadLimitMinute * $nMinutes;
+        //dumpe([$maxTime, $nAccounts, $nMinutes, $loadLimitMinute, $loadMaxPending]);
 
         if ($this->mailDAO != NULL) {
             // Make sure the request object was created
