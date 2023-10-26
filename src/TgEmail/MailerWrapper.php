@@ -134,6 +134,7 @@ class MailerWrapper
 
     public function canSendAnother(): bool
     {
+        // ??? test SMTP connection??
         $smtpConfig = $this->smtpConfig;
         return 1 &&
                 $this->sentLastMinute < $smtpConfig->limitMinute &&
@@ -183,7 +184,7 @@ class MailerWrapper
     {
         $smtpConfig = $this->smtpConfig;
         $mailer = new PHPMailer();
-        $this::mailerDebugBasic($mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
+        static::mailerDebugBasic($mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
         $mailer->isSMTP(); // telling the class to use SMTP
         $mailer->SMTPKeepAlive = true;
         $mailer->SMTPAuth = $smtpConfig->isAuth();
@@ -197,9 +198,9 @@ class MailerWrapper
         //$mailer->Encoding   = PHPMailer::ENCODING_QUOTED_PRINTABLE;
 
         $debugConnect = '';
-        $oldDbgCfg = $this::mailerDebugOutput($mailer, $debugConnect);
+        $oldDbgCfg = static::mailerDebugOutput($mailer, $debugConnect);
         $bc = $mailer->smtpConnect(); // perform connect to log
-        $this::mailerDebugBasic($mailer, ...$oldDbgCfg);
+        static::mailerDebugBasic($mailer, ...$oldDbgCfg);
         if (0 || !$bc) {
             // do something with log stored in $debugConnect on failed connect
             echo("<div><h5>Connect</h5><textarea>$debugConnect</textarea><br/>{$mailer->ErrorInfo}</div>");

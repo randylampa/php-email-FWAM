@@ -115,22 +115,80 @@ class EmailQueue {
 		return $this->mailDAO;
 	}
 
+    /**
+     * First added wrapper will be used as default. Adding another object with same name will overwrite the previous!
+     * @param MailerWrapper $wrapper
+     * @return self
+     */
+    public function addMailerWrapper(MailerWrapper $wrapper): self
+    {
+        $this->mailerWrappers[$wrapper->getNameHash()] = $wrapper;
+        return $this;
+    }
+
+    /**
+     * @param string $nameHash $wrapper->getNameHash() or $email->send_by_cfg
+     * @return MailerWrapper
+     * @throws MailerWrapperNotFoundException
+     */
+    public function getMailerWrapper(string $nameHash): MailerWrapper
+    {
+        if (array_key_exists($nameHash, $this->mailerWrappers)) {
+            return $this->mailerWrappers[$nameHash];
+        }
+        throw new MailerWrapperNotFoundException('Mailer wrapper not found!');
+    }
+
+    /**
+     * @return MailerWrapper
+     * @throws MailerWrapperNotFoundException
+     */
+    public function getDefaultMailerWrapper(): MailerWrapper
+    {
+        $wrapper = reset($this->mailerWrappers);
+        if(!$wrapper){
+            throw new MailerWrapperNotFoundException('Default mailer wrapper not set!');
+        }
+        return $wrapper;
+    }
+
+    /**
+     * @return bool
+     */
+    public function testMailerWrapperConnections(): bool
+    {
+        $allConnected = true;
+        foreach ($this->mailerWrappers as $wrapper) {
+            $phpMailer = $wrapper->getPhpMailerInstance();
+            $connected = $phpMailer->smtpConnect();
+            if (!$connected) {
+                dump(['failed to connect', $wrapper]);
+            }
+            $allConnected &= $connected;
+        }
+        return $allConnected;
+    }
+
+    /**
+     * @param MailerWrapper $wrapper
+     * @return MailerWrapper
+     */
     protected function fwam_initMailerWrapper(MailerWrapper $wrapper): MailerWrapper
     {
         /* reuse old object */
-        if (array_key_exists($wrapper->getName(), $this->mailerWrappers)) {
-            dump(['getting existing wrapper']);
-            $wrapper = $this->mailerWrappers[$wrapper->getName()];
-        } else {
+        try {
+            $wrapper = $this->getMailerWrapper($wrapper->getNameHash());
+            dump(['got existing wrapper']);
+        } catch (MailerWrapperNotFoundException $ex) {
+            $this->addMailerWrapper($wrapper);
             dump(['storing wrapper']);
-            $this->mailerWrappers[$wrapper->getName()] = $wrapper;
         }
         /* /reuse old object */
 
         if ($this->mailDAO) {
             $wrapper->refreshLimits($this->mailDAO);
         }
-        dump([$wrapper, $wrapper->getName(), $wrapper->getNameHash()]); // musí být pře pokusem o inicializaci nového
+        dump([$wrapper, $wrapper->getName(), $wrapper->getNameHash()]); // musí být před pokusem o inicializaci nového
         if (!$wrapper->canSendAnother()) {
             try {
                 $wrapperAlt = $wrapper->getAlternativeWrapper();
@@ -151,19 +209,35 @@ class EmailQueue {
     protected function fwam_getMailerWrapperForEmail(Email $email): MailerWrapper
     {
         // store wrapper instance in protected property of object $email.. providers are stored in pool, setAlternativeWrapper uses links
-        if (!isset($email->_fwamMailerWrapper)) {
-            // get mailer according to $email->send_via_cfg (from pool $this->wrappers) else use default
-            // get default for now
-            $w = new MailerWrapper($this->config->getSmtpConfig());
 
-            /* !!! */
-//            $smtpConfig2 = \NFW\Mailing\MailerQueueProvider::getSMTP_forpsi();
-//            //$smtpConfig2->setCredentials('...', '...');
-//            $w->setAlternativeWrapper(new MailerWrapper($smtpConfig2));
-            /* !!! */
-
-            $email->_fwamMailerWrapper = $this->fwam_initMailerWrapper($w);
+        if (isset($email->_fwamMailerWrapper) && $email->_fwamMailerWrapper) {
+            return $email->_fwamMailerWrapper;
         }
+
+        $wrapper = null;
+        if (isset($email->send_via_cfg) && $email->send_via_cfg) {
+            // get mailer according to $email->send_via_cfg (from pool) ...
+            try {
+                $wrapper = $this->getMailerWrapper($email->send_via_cfg);
+                dump(['got existing wrapper by $email->send_via_cfg']);
+            } catch (MailerWrapperNotFoundException $ex) {
+                // silent nothing
+            }
+        }
+
+        if (!$wrapper) {
+            // ... else use default
+            try {
+                $wrapper = $this->getDefaultMailerWrapper();
+                dump(['got default wrapper']);
+            } catch (MailerWrapperNotFoundException $ex) {
+                // get new default SMTP for now
+                $wrapper = new MailerWrapper($this->config->getSmtpConfig());
+            }
+        }
+
+        $email->_fwamMailerWrapper = $this->fwam_initMailerWrapper($wrapper);
+
         return $email->_fwamMailerWrapper;
     }
 
@@ -173,8 +247,6 @@ class EmailQueue {
      */
     protected function fwam_getMailerForEmail(Email $email): PHPMailer
     {
-//        $phpMailer = $this->getMailer();
-//        return $phpMailer;
         $wrapper = $this->fwam_getMailerWrapperForEmail($email);
         $phpMailer = $wrapper->getPhpMailerInstance();
         return $phpMailer;
@@ -242,7 +314,9 @@ class EmailQueue {
             //dump($emails);
             $rc->pending = count($emails);
             foreach ($emails as $email) {
-//                if (!$this->fwam_canSendEmail($email)) {
+//                $em2 = new Email();
+//                $em2->uid = $email->uid;
+//                if (!$this->fwam_canSendEmail($em2)) {
 //                    $rc->skipped++;
 //                    continue;
 //                }
@@ -385,7 +459,7 @@ class EmailQueue {
         // Sender
         // if sender differs from ones provided in current smtp config, add reply-to and set sender as smtp default
         $emailSender = $email->getSender();
-        $smtpSenders = $this->config->getSmtpConfig()->getSenders();
+        $smtpSenders = $this->config->getSmtpConfig()->getSenders(); /* !!! ber nastavení z Wrapperu! Pokud by šlo o rozesílání z různých sad, byl by to problém (furt jeden odesilatel) */
         $found = false;
         foreach ($smtpSenders as $smtpSender) {
             if ($smtpSender->email === $emailSender->email) {
