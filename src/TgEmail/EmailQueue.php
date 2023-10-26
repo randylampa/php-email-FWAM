@@ -34,6 +34,11 @@ class EmailQueue {
      * @var EmailsDAO
      */
     protected $mailDAO;
+
+    /**
+     * @var MailerWrapper[]
+     */
+    protected $mailerWrappers = [];
     
     public function __construct($config, EmailsDAO $mailDAO = NULL) {
         $this->config  = $config;
@@ -110,26 +115,56 @@ class EmailQueue {
 		return $this->mailDAO;
 	}
 
+    protected function fwam_initMailerWrapper(MailerWrapper $wrapper): MailerWrapper
+    {
+        /* reuse old object */
+        if (array_key_exists($wrapper->getName(), $this->mailerWrappers)) {
+            dump(['getting existing wrapper']);
+            $wrapper = $this->mailerWrappers[$wrapper->getName()];
+        } else {
+            dump(['storing wrapper']);
+            $this->mailerWrappers[$wrapper->getName()] = $wrapper;
+        }
+        /* /reuse old object */
+
+        if ($this->mailDAO) {
+            $wrapper->refreshLimits($this->mailDAO);
+        }
+        dump([$wrapper, $wrapper->getName(), $wrapper->getNameHash()]); // musí být pře pokusem o inicializaci nového
+        if (!$wrapper->canSendAnother()) {
+            try {
+                $wrapperAlt = $wrapper->getAlternativeWrapper();
+                // try alternative
+                $wrapper = $this->fwam_initMailerWrapper($wrapperAlt);
+            } catch (MailerWrapperNotFoundException $ex) {
+                // has no other alternative.. left current
+                dump($ex, $this);
+            }
+        }
+        return $wrapper;
+    }
+
     /**
      * @param Email $email
      * @return MailerWrapper
      */
     protected function fwam_getMailerWrapperForEmail(Email $email): MailerWrapper
     {
-        // get mailer according to $email->send_via_cfg else use default
-        if (!isset($this->wrapper)) {
-            $this->wrapper = null; // just temporary
-        }
-        if (!$this->wrapper) {
+        // store wrapper instance in protected property of object $email.. providers are stored in pool, setAlternativeWrapper uses links
+        if (!isset($email->_fwamMailerWrapper)) {
+            // get mailer according to $email->send_via_cfg (from pool $this->wrappers) else use default
             // get default for now
-            $smtpConfig = $this->config->getSmtpConfig();
-            $this->wrapper = new MailerWrapper($smtpConfig);
-            if ($this->mailDAO) {
-                $this->wrapper->refreshLimits($this->mailDAO);
-            }
-            //dump([$this->wrapper, $this->wrapper->getNameHash()]);
+            $w = new MailerWrapper($this->config->getSmtpConfig());
+
+            /* !!! */
+//            $smtpConfig2 = \NFW\Mailing\MailerQueueProvider::getSMTP_forpsi();
+//            //$smtpConfig2->setCredentials('...', '...');
+//            $w->setAlternativeWrapper(new MailerWrapper($smtpConfig2));
+            /* !!! */
+
+            $email->_fwamMailerWrapper = $this->fwam_initMailerWrapper($w);
         }
-        return $this->wrapper;
+        return $email->_fwamMailerWrapper;
     }
 
     /**
