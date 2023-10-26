@@ -127,7 +127,7 @@ class EmailQueue {
             if ($this->mailDAO) {
                 $this->wrapper->refreshLimits($this->mailDAO);
             }
-            dump([$this->wrapper, $this->wrapper->getNameHash()]);
+            //dump([$this->wrapper, $this->wrapper->getNameHash()]);
         }
         return $this->wrapper;
     }
