@@ -58,6 +58,11 @@ class MailerWrapper
      */
     protected $flagLimitsRefreshed = false;
 
+    /**
+     * @var MailerWrapper
+     */
+    protected $alternativeWrapper = null;
+
     public function __construct(Config\SmtpConfig $smtpConfig)
     {
         $this->smtpConfig = $smtpConfig;
@@ -95,6 +100,28 @@ class MailerWrapper
             $this->flagLimitsRefreshed = true;
         }
         return $this;
+    }
+
+    /**
+     * @param MailerWrapper $wrapper
+     * @return self
+     */
+    public function setAlternativeWrapper(MailerWrapper $wrapper): self
+    {
+        $this->alternativeWrapper = $wrapper;
+        return $this;
+    }
+
+    /**
+     * @return MailerWrapper
+     * @throws MailerWrapperNotFoundException
+     */
+    public function getAlternativeWrapper(): MailerWrapper
+    {
+        if (!$this->alternativeWrapper) {
+            throw new MailerWrapperNotFoundException('Alternative wrapper not set!');
+        }
+        return $this->alternativeWrapper;
     }
 
     public function setSent(): self
@@ -193,4 +220,9 @@ class MailerWrapper
         return $this->mailer;
     }
 
+}
+
+class MailerWrapperNotFoundException extends \Exception
+{
+    
 }
