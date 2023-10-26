@@ -114,7 +114,7 @@ class EmailQueue {
      * @param Email $email
      * @return MailerWrapper
      */
-    public function fwam_getMailerWrapperForEmail(Email $email): MailerWrapper
+    protected function fwam_getMailerWrapperForEmail(Email $email): MailerWrapper
     {
         // get mailer according to $email->send_via_cfg else use default
         if (!isset($this->wrapper)) {
@@ -136,7 +136,7 @@ class EmailQueue {
      * @param Email $email
      * @return PHPMailer
      */
-    public function fwam_getMailerForEmail(Email $email): PHPMailer
+    protected function fwam_getMailerForEmail(Email $email): PHPMailer
     {
 //        $phpMailer = $this->getMailer();
 //        return $phpMailer;
@@ -149,7 +149,7 @@ class EmailQueue {
      * @param Email $email
      * @return bool
      */
-    public function fwam_canSendEmail(Email $email): bool
+    protected function fwam_canSendEmail(Email $email): bool
     {
         //dump([__METHOD__, func_get_args(), debug_backtrace()]);
 //        return true;
@@ -160,7 +160,7 @@ class EmailQueue {
     /**
      * @param Email $email
      */
-    public function fwam_updateMailerProps(Email $email)
+    protected function fwam_updateMailerProps(Email $email)
     {
         //dump([__METHOD__, func_get_args(), debug_backtrace()]);
         $wrapper = $this->fwam_getMailerWrapperForEmail($email);
