@@ -15,7 +15,7 @@ use PHPMailer\PHPMailer\SMTP;
  *
  * @author rene
  */
-class EmailMailer
+class MailerWrapper
 {
 
     /**

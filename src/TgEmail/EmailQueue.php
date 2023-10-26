@@ -72,7 +72,7 @@ class EmailQueue {
         if ($this->mailer == null) {
             $smtpConfig = $this->config->getSmtpConfig();
             $this->mailer = new PHPMailer();
-            EmailMailer::mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
+            MailerWrapper::mailerDebugBasic($this->mailer, $smtpConfig->getDebugLevel() ?: SMTP::DEBUG_OFF); // init debug
             $this->mailer->isSMTP(); // telling the class to use SMTP
             $this->mailer->SMTPKeepAlive = true;
             $this->mailer->SMTPAuth   = $smtpConfig->isAuth();
@@ -86,9 +86,9 @@ class EmailQueue {
             //$this->mailer->Encoding   = PHPMailer::ENCODING_QUOTED_PRINTABLE;
 
             $debugConnect = '';
-            $oldDbgCfg = EmailMailer::mailerDebugOutput($this->mailer, $debugConnect);
+            $oldDbgCfg = MailerWrapper::mailerDebugOutput($this->mailer, $debugConnect);
             $bc = $this->mailer->smtpConnect(); // perform connect to log
-            EmailMailer::mailerDebugBasic($this->mailer, ...$oldDbgCfg);
+            MailerWrapper::mailerDebugBasic($this->mailer, ...$oldDbgCfg);
             if (0 || !$bc) {
                 // do something with log stored in $debugConnect on failed connect
                 echo("<div><h5>Connect</h5><textarea>$debugConnect</textarea><br/>{$this->mailer->ErrorInfo}</div>");
@@ -112,9 +112,9 @@ class EmailQueue {
 
     /**
      * @param Email $email
-     * @return EmailMailer
+     * @return MailerWrapper
      */
-    public function fwam_getMailerWrapperForEmail(Email $email): EmailMailer
+    public function fwam_getMailerWrapperForEmail(Email $email): MailerWrapper
     {
         // get mailer according to $email->send_via_cfg else use default
         if (!isset($this->wrapper)) {
@@ -123,7 +123,7 @@ class EmailQueue {
         if (!$this->wrapper) {
             // get default for now
             $smtpConfig = $this->config->getSmtpConfig();
-            $this->wrapper = new EmailMailer($smtpConfig);
+            $this->wrapper = new MailerWrapper($smtpConfig);
             if ($this->mailDAO) {
                 $this->wrapper->refreshLimits($this->mailDAO);
             }
@@ -345,7 +345,7 @@ class EmailQueue {
         }
 
         $debugSend = '';
-        $oldDbgCfg = EmailMailer::mailerDebugOutput($phpMailer, $debugSend); // enable debug output
+        $oldDbgCfg = MailerWrapper::mailerDebugOutput($phpMailer, $debugSend); // enable debug output
         
         // Sender
         // if sender differs from ones provided in current smtp config, add reply-to and set sender as smtp default
@@ -435,7 +435,7 @@ class EmailQueue {
             }
         }
 
-        EmailMailer::mailerDebugBasic($phpMailer, ...$oldDbgCfg); // return debug state back
+        MailerWrapper::mailerDebugBasic($phpMailer, ...$oldDbgCfg); // return debug state back
         if (0 || !$rc) {
             // do something with log stored in $debugSend on failed send
             echo("<div><h5>Send [uid:$email->uid|$email->queued_time]</h5><textarea>$debugSend</textarea><br/>$phpMailer->ErrorInfo</div>");
