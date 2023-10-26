@@ -53,6 +53,11 @@ class MailerWrapper
      */
     protected $sentLastDay = 0;
 
+    /**
+     * @var bool
+     */
+    protected $flagLimitsRefreshed = false;
+
     public function __construct(Config\SmtpConfig $smtpConfig)
     {
         $this->smtpConfig = $smtpConfig;
@@ -76,12 +81,19 @@ class MailerWrapper
         return $this->nameHash;
     }
 
-    public function refreshLimits(EmailsDAO $dao): self
+    /**
+     * @param EmailsDAO $dao
+     * @return self
+     */
+    public function refreshLimits(EmailsDAO $dao, bool $force = false): self
     {
-        $sent_via_cfg = $this->getNameHash();
-        $this->sentLastMinute = $dao->getCountSentVia($sent_via_cfg, 'MINUTE');
-        $this->sentLastHour = $dao->getCountSentVia($sent_via_cfg, 'HOUR');
-        $this->sentLastDay = $dao->getCountSentVia($sent_via_cfg, 'DAY');
+        if ($force || !$this->flagLimitsRefreshed) {
+            $sent_via_cfg = $this->getNameHash();
+            $this->sentLastMinute = $dao->getCountSentVia($sent_via_cfg, 'MINUTE');
+            $this->sentLastHour = $dao->getCountSentVia($sent_via_cfg, 'HOUR');
+            $this->sentLastDay = $dao->getCountSentVia($sent_via_cfg, 'DAY');
+            $this->flagLimitsRefreshed = true;
+        }
         return $this;
     }
 
