@@ -370,7 +370,8 @@ class EmailQueue {
                 $email->status = Email::SENT;
                 if (!$rc) {
                     $email->failed_attempts ++;
-                    if ($email->failed_attempts >= 3) {
+                    $email->priority--; // delay repeat by lowering priority
+                    if ($email->failed_attempts >= 2) {
                         $email->status = Email::FAILED;
                         foreach ($email->getAttachments() AS $a) {
                             if ($a->deleteAfterSent && $a->deleteAfterFailed) {
@@ -379,6 +380,8 @@ class EmailQueue {
                         }
                     } else {
                         $email->status = Email::PENDING;
+                        /* TODO: update queued_time to future */
+                        // delay repeat by ...
                     }
                 } else {
                     $email->sent_time = new Date(time(), $this->config->getTimezone());
