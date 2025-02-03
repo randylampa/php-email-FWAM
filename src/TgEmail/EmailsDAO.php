@@ -33,7 +33,7 @@ class EmailsDAO extends DAO {
 				'`reply_to`        VARCHAR(200) NULL COMMENT \'Reply-To address\', '.
 				'`recipients`      TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'email recipients\', '.
 				'`subject`         VARCHAR(200) NOT NULL COMMENT \'email subject\', '.
-				'`body`            TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'email bodies\', '.
+				'`body`            MEDIUMTEXT   COLLATE utf8mb4_bin NOT NULL COMMENT \'email bodies\', '.
 				'`attachments`     TEXT         COLLATE utf8mb4_bin NOT NULL COMMENT \'attachment data\', '.
 				'`queued_time`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT \'Time the email was queued\', '. // FWAM auto CURRENT_TIMESTAMP, can be future
 				'`priority`        INT(11)      NOT NULL DEFAULT 0 COMMENT \'Priority of mail\', '. // FWAM
