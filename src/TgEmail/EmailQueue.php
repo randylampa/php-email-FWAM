@@ -406,6 +406,7 @@ class EmailQueue {
             $rc->setSender($this->config->getDefaultSender());
         }
         $rc->setPriority($email->getPriority());
+        $rc->setUnsubLink($email->getUnsubLink());
         $rc->setReplyTo($email->getReplyTo());
         $rc->addAttachments($email->getAttachments());
         $rc->setBody(Email::TEXT, $email->getBody(Email::TEXT));
@@ -510,7 +511,20 @@ class EmailQueue {
         if (1) {
             // custom headers
             $phpMailer->addCustomHeader('Precedence', 'bulk');
-            //$phpMailer->addCustomHeader('List-Unsubscribe', '???');
+        }
+
+        if ($email->unsub_link) {
+            $sLU = 'List-Unsubscribe';
+            $phpMailer->addCustomHeader($sLU, "<$email->unsub_link>");
+            if (!in_array($sLU, $phpMailer->DKIM_extraHeaders)) {
+                $phpMailer->DKIM_extraHeaders[] = $sLU;
+            }
+            
+            $sLUP = 'List-Unsubscribe-Post';
+            $phpMailer->addCustomHeader($sLUP, 'List-Unsubscribe=One-Click');
+            if (!in_array($sLUP, $phpMailer->DKIM_extraHeaders)) {
+                $phpMailer->DKIM_extraHeaders[] = $sLUP;
+            }
         }
 
         // Subject

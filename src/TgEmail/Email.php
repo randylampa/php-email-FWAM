@@ -46,6 +46,11 @@ class Email {
     public $recipients;
     public $reply_to;
     public $subject;
+
+    /**
+     * @var string
+     */
+    public $unsub_link; // FWAM
     public $body;
     public $attachments;
     
@@ -70,6 +75,24 @@ class Email {
     public function setPriority(int $p = self::PRIO_NORMAL)
     {
         $this->priority = $p;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getUnsubLink(): string
+    {
+        return $this->unsub_link ?: '';
+    }
+
+    /**
+     * @param string $l
+     * @return $this
+     */
+    public function setUnsubLink(string $l)
+    {
+        $this->unsub_link = $l;
         return $this;
     }
 
