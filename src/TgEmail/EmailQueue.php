@@ -298,7 +298,7 @@ class EmailQueue {
         $nMinutes = intval(ceil($maxTime / 60));
         $smtpConfig = $this->config->getSmtpConfig();
         $loadLimitMinute = ($nAccounts ? $nAccounts : 1) * $smtpConfig->limitMinute; // eg. 250 - one forpsi account limit
-        $loadMaxPending = $loadLimitMinute * $nMinutes;
+        $loadMaxPending = min($loadLimitMinute * $nMinutes, 500);
         //dumpe([$maxTime, $nAccounts, $nMinutes, $loadLimitMinute, $loadMaxPending]);
 
         if ($this->mailDAO != NULL) {
