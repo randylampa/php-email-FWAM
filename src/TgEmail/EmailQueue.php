@@ -39,6 +39,14 @@ class EmailQueue {
      * @var MailerWrapper[]
      */
     protected $mailerWrappers = [];
+
+    /**
+     * @var int|array? Cause or failure
+     */
+    public $fwam_sentStatus = null;
+    const sentStatus_NOWRAPPER = 1;
+    const sentStatus_NOCONNECT = 2;
+    const sentStatus_NOSEND = 3;
     
     public function __construct($config, EmailsDAO $mailDAO = NULL) {
         $this->config  = $config;
@@ -331,6 +339,8 @@ class EmailQueue {
                 // send
                 if ($this->sendByUid($email->uid, TRUE)) {
                     $rc->sent++;
+                } elseif ($this->fwam_sentStatus !== self::sentStatus_NOSEND) {
+                    $rc->skipped++;
                 } else {
                     $rc->failed++;
                 }
@@ -346,6 +356,7 @@ class EmailQueue {
      * Synchronously send email from queue with id.
      */
     public function sendByUid($uid, $checkStatus = FALSE) {
+        $this->fwam_sentStatus = null;
         if ($this->mailDAO != NULL) {
             // Retrieve
             $email = $this->mailDAO->get($uid);
@@ -354,6 +365,7 @@ class EmailQueue {
             if ($email != NULL) {
                 if (!$this->fwam_canSendEmail($email)) {
                     // repeat test 'cos its different entry
+                    $this->fwam_sentStatus = self::sentStatus_NOWRAPPER;
                     return false;
                 }
                 // Mark as being processed
@@ -369,7 +381,8 @@ class EmailQueue {
                 // Save
                 $email->status = Email::SENT;
                 if (!$rc) {
-                    $email->failed_attempts ++;
+                    $this->fwam_sentStatus === self::sentStatus_NOSEND ?
+                                    $email->failed_attempts++ : null;
                     $email->priority--; // delay repeat by lowering priority
                     if ($email->failed_attempts >= 2) {
                         $email->status = Email::FAILED;
@@ -452,9 +465,11 @@ class EmailQueue {
      * Synchronously send email object.
      */
     protected function _send(Email $email) {
+        $this->fwam_sentStatus = null;
         // Start
         if (!$this->fwam_canSendEmail($email)) {
             // repeat test 'cos its different entry
+            $this->fwam_sentStatus = self::sentStatus_NOWRAPPER;
             return false;
         }
         //$phpMailer = $this->getMailer();
@@ -462,6 +477,7 @@ class EmailQueue {
         
         if (!$phpMailer->getSMTPInstance()->connected()) {
             // should be already connected, do not repeat connection and signal fail
+            $this->fwam_sentStatus = self::sentStatus_NOCONNECT;
             return false;
         }
 
@@ -559,6 +575,7 @@ class EmailQueue {
             Log::debug('Mail sent: '.$email->getLogString());
             if (!$rc) {
                 Log::error("Mailer Error: " . $phpMailer->ErrorInfo);
+                $this->fwam_sentStatus = self::sentStatus_NOSEND;
             } else {
                 $this->fwam_updateMailerProps($email);
                 foreach ($email->getAttachments() as $a) {
