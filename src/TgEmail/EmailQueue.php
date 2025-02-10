@@ -188,7 +188,7 @@ class EmailQueue {
         try {
             $wrapper = $this->getMailerWrapper($wrapper->getNameHash());
             //dump(['got existing wrapper']);
-            Log::debug('got existing wrapper');
+            //Log::debug('got existing wrapper');
         } catch (MailerWrapperNotFoundException $ex) {
             $this->addMailerWrapper($wrapper);
             //dump(['storing wrapper']);
@@ -320,6 +320,11 @@ class EmailQueue {
             $rc->processed = 0;
             $rc->sent      = 0;
             $rc->failed    = 0;
+            $rc->fwam_sentStatus = [
+                self::sentStatus_NOWRAPPER => 0,
+                self::sentStatus_NOCONNECT => 0,
+                self::sentStatus_NOSEND => 0,
+            ];
         
             // do housekeeping
             $this->mailDAO->housekeeping();
@@ -345,6 +350,7 @@ class EmailQueue {
                     $rc->failed++;
                 }
                 $rc->processed++;
+                $rc->fwam_sentStatus[$this->fwam_sentStatus]++;
                 if (Request::getRequest()->getElapsedTime() > $maxTime) break;
             }
             return $rc;
