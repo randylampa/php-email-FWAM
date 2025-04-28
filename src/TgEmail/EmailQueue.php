@@ -350,7 +350,9 @@ class EmailQueue {
                     $rc->failed++;
                 }
                 $rc->processed++;
-                $rc->fwam_sentStatus[$this->fwam_sentStatus]++;
+                if (!is_null($this->fwam_sentStatus)) {
+                    $rc->fwam_sentStatus[$this->fwam_sentStatus]++;
+                }
                 if (Request::getRequest()->getElapsedTime() > $maxTime) break;
             }
             return $rc;
